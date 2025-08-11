@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+
 	"strings"
+
+
+	"github.com/Renaldis/mockdata/data"
 )
 
 func main() {
+
 	var help bool
 	var inputPath, outputPath string
 
@@ -48,6 +53,17 @@ func main() {
 
 	if err := validatetype(mapping); err != nil {
 		fmt.Printf("Gagal validasi tipe data: %s\n", err)
+		os.Exit(0)
+	}
+
+	result, err := generateOutput(mapping)
+	if err != nil {
+		fmt.Printf("Gagal membuat data: %s\n", err)
+		os.Exit(0)
+	}
+
+	if err := writeOutput(outputPath, result); err != nil {
+		fmt.Printf("Gagal menulis hasil: %s\n", err)
 		os.Exit(0)
 	}
 
@@ -123,17 +139,52 @@ func readInput(path string, mapping *map[string]string) error {
 }
 
 func validatetype(mapping map[string]string) error {
-	supported := map[string]bool{
-		"name":    true,
-		"address": true,
-		"date":    true,
-		"phone":   true,
-	}
 
 	for _, value := range mapping {
-		if !supported[value] {
+		if !data.Supported[value] {
 			return errors.New("tipe data tidak didukung")
 		}
 	}
+	return nil
+}
+
+func generateOutput(mapping map[string]string) (map[string]any, error) {
+	result := make(map[string]any)
+
+	for key, dataType := range mapping {
+		result[key] = data.Generate(dataType)
+	}
+
+	return result, nil
+}
+
+func writeOutput(path string, result map[string]any) error {
+	if path == "" {
+		return errors.New("path tidak valid")
+	}
+
+	// 0644 -> bawaan linux artinya kita bisa akses read, write, tapi orang lain hanya akses read aja
+	// RDWR -> Read write
+	// CREATE -> membuat
+	// TRUNC -> menghapus/mengosongkan
+
+	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	file, err := os.OpenFile(path, flags, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	resultByte, err := json.MarshalIndent(result, "", "  ")
+	// marshaindent json versi rapih ada indentasi
+	// marshal aja cuman sebaris nanti json nya
+	if err != nil {
+		return err
+	}
+
+	if _, err := file.Write(resultByte); err != nil {
+		return err
+	}
+
 	return nil
 }
