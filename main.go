@@ -7,10 +7,10 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"strings"
-
 
 	"github.com/Renaldis/mockdata/data"
 )
@@ -121,7 +121,11 @@ func readInput(path string, mapping *map[string]string) error {
 		return err
 	}
 
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("failed to close file: %v", err)
+		}
+	}()
 
 	fileByte, err := io.ReadAll(file)
 	if err != nil {
@@ -173,7 +177,11 @@ func writeOutput(path string, result map[string]any) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("failed to close file: %v", err)
+		}
+	}()
 
 	resultByte, err := json.MarshalIndent(result, "", "  ")
 	// marshaindent json versi rapih ada indentasi
