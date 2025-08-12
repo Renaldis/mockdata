@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 )
 
 func Generate(dataType string) any {
@@ -28,7 +29,12 @@ func generateName() string {
 	return name[index]
 }
 func generateDate() string {
-	return ""
+	year := 1950 + rand.Intn(100)
+	month := 1 + rand.Intn(12)
+	day := 1 + rand.Intn(28)
+
+	return fmt.Sprintf("%02d-%02d-%d", day, month, year)
+	// %02d = jika angkanya 1-9 akan tercetak angka 0 didepan nya seperti 01, 02, 03 dst.
 }
 func generateAddress() string {
 	streetLen := len(SUBTYPE_STREET)
@@ -41,5 +47,19 @@ func generateAddress() string {
 	return fmt.Sprintf("JL. %s No. %d, %s", address[SUBTYPE_STREET][streetIdx], number, address[SUBTYPE_CITY][cityIdx])
 }
 func generatePhone() string {
-	return ""
+	prefixLen := 6 + rand.Intn(4)
+
+	var sb strings.Builder
+	sb.WriteString("081")
+
+	for i := 0; i < prefixLen; i++ {
+		digit := rand.Intn(10)
+		digitString := fmt.Sprintf("%d", digit)
+
+		sb.WriteString(digitString)
+	}
+
+	result := sb.String()
+
+	return result
 }
